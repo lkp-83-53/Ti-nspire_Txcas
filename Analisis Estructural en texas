@@ -1,0 +1,106 @@
+Define LibPub analis_estr(gdl_f)=
+Prgm
+:n:=dim(barra)
+:newMat(n+1,4)→matriz_datos
+:matriz_datos[1,1]:="Barra"
+:matriz_datos[1,2]:="Longitud"
+:matriz_datos[1,3]:="λx"
+:matriz_datos[1,4]:="λy"
+:
+:For i,1,n,1
+:dx:=cx[nf[i]]-cx[ni[i]]
+:dy:=cy[nf[i]]-cy[ni[i]]
+:long:=√(dx^(2)+dy^(2))
+:λx:=((dx)/(long))
+:λy:=((dy)/(long))
+:
+:      matriz_datos[i+1,1]:=i
+:      matriz_datos[i+1,2]:=long
+:      matriz_datos[i+1,3]:=λx
+:      matriz_datos[i+1,4]:=λy
+:EndFor
+:Disp matriz_datos
+:
+:©Definir vector grados de libertad y Matriz Global
+:gdl_barra:=newList(4)
+:k:=newMat(2*dim(nodo),2*dim(nodo))
+:
+:©Matriz 4x4 de rigidez
+:
+:For y,1,n,1
+:long1:=matriz_datos[y+1,2]
+:λ1x:=matriz_datos[y+1,3]
+:λ1y:=matriz_datos[y+1,4]
+:
+:ke:=((1)/(long1))*[[λ1x^(2),λ1x*λ1y,−λ1x^(2),−λ1x*λ1y][λ1x*λ1y,λ1y^(2),−λ1x*λ1y,−λ1y^(2)][−λ1x^(2),−λ1x*λ1y,λ1x^(2),λ1x*λ1y][−λ1x*λ1y,−λ1y^(2),λ1x*λ1y,λ1y^(2)]]
+:©
+:©Disp "K",y,"=",approx(ke)
+:©Dar para cada matriz su grado de libertad
+:
+:gdl_barra[1]:=nx[y]
+:gdl_barra[2]:=ny[y]
+:gdl_barra[3]:=fx[y]
+:gdl_barra[4]:=fy[y]
+:
+:©Disp gdl_barra
+:For igdl,1,4,1
+:  ifila:=gdl_barra[igdl]
+:     For jgdl,1,4,1
+:       jcol:=gdl_barra[jgdl]
+:       k[ifila,jcol]:=k[ifila,jcol]+ke[igdl,jgdl]
+:     EndFor
+:EndFor
+:EndFor
+:
+:Disp approx(k)
+:
+:
+:gdl_t:=2*dim(nodo)
+:
+:©Creaccion de matrices de grados de libertad
+:©
+:kff:=newMat(gdl_f,gdl_f)
+:©
+:ksf:=newMat(gdl_f,gdl_t-gdl_f)
+:©
+:kfs:=newMat(gdl_t-gdl_f,gdl_f)
+:©
+:kss:=newMat(gdl_t-gdl_f,gdl_t-gdl_f)
+:
+:©Creaccion de matriz de grado de libertad en kff
+:
+:For i,1,gdl_f
+:  For j,1,gdl_f
+:    kff[i,j]:=k[i,j]
+:  EndFor
+:EndFor
+:Disp approx(kff)
+:©Vector fuerza de grado de libertad
+:vec_fuer_f:=newMat(gdl_f,1)
+:
+:For i,0,((gdl_f)/(2)),1
+:  If mod(i,2)=0 Then
+:       vec_fuer_f[i+1,1]:=v_fx[i+1]
+:       vec_fuer_f[i+2,1]:=v_fy[i+1]
+:  EndIf
+:EndFor
+:©Creaccion de matriz de grado de libertad kfs
+:p:=gdl_f
+:For i,gdl_f+1,gdl_t,1
+:  For j,1,gdl_f,1
+:    kfs[i-p,j]:=k[i,j]
+:  EndFor
+:EndFor
+:
+:Disp approx(kfs)
+:©Matriz desplazamiento
+:vect_desp:=newMat(gdl_f,1)
+:vect_desp:=kff^(−1)*vec_fuer_f
+:
+:Disp "Los desplazamientos son",approx(vect_desp)
+:©Matriz de reacciones
+:vect_reaction:=newMat(gdl_t-gdl_f,1)
+:
+:vect_reaction:=kfs*vect_desp
+:Disp "Las reacciones son",approx(vect_reaction)
+:EndPrgm
